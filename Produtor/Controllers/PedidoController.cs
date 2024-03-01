@@ -11,7 +11,7 @@ namespace Produtor.Controllers
     public class PedidoController : ControllerBase
     {
         [HttpPost]
-        public IActionResult Post()
+        public IActionResult Post(Pedido pedido)
         {
             var factory = new ConnectionFactory() { HostName = "localhost", UserName = "guest", Password = "guest" };
             using var connection = factory.CreateConnection();
@@ -25,7 +25,7 @@ namespace Produtor.Controllers
                     arguments: null);
 
                 string message = JsonSerializer
-                    .Serialize(new Pedido(1, new Usuario(1, "Demetrios", "demetrios@email.com")));
+                    .Serialize(pedido);
                 var body = Encoding.UTF8.GetBytes(message);
 
                 channel.BasicPublish(
