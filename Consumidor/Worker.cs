@@ -4,6 +4,7 @@ using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
+using System.Net.Http;
 
 namespace Consumidor
 {
@@ -30,13 +31,14 @@ namespace Consumidor
                                  arguments: null);
 
                 var consumer = new EventingBasicConsumer(channel);
-                consumer.Received += (sender, eventArgs) =>
+                consumer.Received += async (sender, eventArgs) =>
                 {
                     var body = eventArgs.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body);
                     var pedido = JsonSerializer.Deserialize<Pedido>(body);
 
                     //Enviar para banco de dados e gravar
+                    await SendToBDByPostAsync(pedido);
 
                     Console.WriteLine(pedido?.ToString());
                 };
@@ -47,6 +49,25 @@ namespace Consumidor
                     consumer: consumer);
                 await Task.Delay(2000, stoppingToken);
             }
+        }
+
+        public async Task SendToBDByPostAsync(Pedido pedido)
+        {
+            var client = new HttpClient();
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7195/api/Pedido");
+            var content = new StringContent("{\r\n  " +
+                "\"id\": " + pedido.Id.ToString() + ",\r\n  " +
+                "\"usuario\": {\r\n    " +
+                    "\"id\": 10,\r\n    " +
+                    "\"nome\": \"string10\",\r\n    " +
+                    "\"email\": \"string10\"\r\n  " +
+                    "},\r\n  " +
+                "\"dataCriacao\": \"2024-03-01T21:35:04.059Z" +
+                "\"\r\n}", null, "application/json");
+            request.Content = content;
+            var response = await client.SendAsync(request);
+            //response.EnsureSuccessStatusCode();
+            Console.WriteLine(await response.Content.ReadAsStringAsync());
         }
     }
 }
