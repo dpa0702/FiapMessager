@@ -36,6 +36,8 @@ namespace Consumidor
                     var message = Encoding.UTF8.GetString(body);
                     var pedido = JsonSerializer.Deserialize<Pedido>(body);
 
+                    //Enviar para banco de dados e gravar
+
                     Console.WriteLine(pedido?.ToString());
                 };
 
